@@ -1,9 +1,11 @@
 # Ancestry-stratified variant classification in monogenic diabetes genes
 
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+
 Analysis scripts for the paper: "Ancestry-stratified analysis of variant classification in monogenic diabetes genes reveals a 70% annotation gap and differential curation burden across genomic databases"
 
-**Author:** Paulo Dario, PhD
-**Affiliation:** Instituto Nacional de Saúde Doutor Ricardo Jorge (INSA), Lisboa, Portugal
+**Author:** Paulo Dario, PhD  
+**Affiliation:** Instituto Nacional de Saúde Doutor Ricardo Jorge (INSA), Lisboa, Portugal  
 **ORCID:** 0000-0002-4203-9179
 
 ## Contents
