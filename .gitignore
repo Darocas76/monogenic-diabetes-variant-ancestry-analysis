@@ -1,0 +1,12 @@
+# Ficheiros intermediários de processamento
+gnomad_clinvar_merged.csv
+
+# Ficheiros temporários Python
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+
+# Sistemas operativos
+.DS_Store
+Thumbs.db
