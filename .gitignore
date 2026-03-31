@@ -1,12 +1,18 @@
-# Ficheiros intermediários de processamento
-gnomad_clinvar_merged.csv
+# Intermediate data files
+variant_summary.txt.gz
+gnomad_mody_raw.csv
+clinvar_mody_dict.pkl
 
-# Ficheiros temporários Python
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
 .ipynb_checkpoints/
 
-# Sistemas operativos
+# OS
 .DS_Store
 Thumbs.db
+
+# Submission documents (not for repository)
+*.docx
+*.xlsx
