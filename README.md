@@ -15,7 +15,7 @@ ORCID: [0000-0002-4203-9179](https://orcid.org/0000-0002-4203-9179)
 
 ## Overview
 
-This repository contains the data and code to reproduce the analysis presented in the manuscript. The study cross-references ClinVar variant classifications (GRCh38, March 2026; 4,162,633 variants) with gnomAD v4.0 genome allele frequency data for 17 monogenic diabetes genes, stratified by genetic ancestry group.
+This repository contains the data and code to reproduce the analysis presented in the manuscript. The study cross-references ClinVar variant classifications (GRCh38, April 2026; 4,421,188 variants) with gnomAD v4.0 genome allele frequency data for 17 monogenic diabetes genes, stratified by genetic ancestry group.
 
 ## Repository structure
 
@@ -27,7 +27,7 @@ figures/          Publication figures (PNG 300 DPI + SVG)
 
 ## Data sources
 
-- **ClinVar:** variant_summary.txt.gz (GRCh38, accessed March 2026) — https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/
+- **ClinVar:** variant_summary.txt.gz (GRCh38, accessed April 2026) — https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/
 - **gnomAD:** v4.0 genomes via public GraphQL API — https://gnomad.broadinstitute.org/api (dataset: gnomad_r4)
 
 ## Reproducing the analysis
@@ -54,7 +54,7 @@ Python 3.10+, pandas ≥2.1, scipy ≥1.11, matplotlib ≥3.8, requests ≥2.31
 
 | File | Description |
 |------|-------------|
-| `data/supplementary_table1.csv` | 4,365 ClinVar-annotated variants with population allele frequencies (Supplementary Table 1) |
+| `data/supplementary_table1.csv` | 4,366 ClinVar-annotated variants with population allele frequencies (Supplementary Table 1) |
 | `data/gene_by_gene_analysis.csv` | ClinVar/gnomAD coverage and VUS rates by gene and ancestry |
 | `data/mody_vus_by_population.csv` | VUS rates by individual gnomAD ancestry group |
 | `data/mody_vus_EUR_vs_nonEUR.csv` | Aggregated EUR vs non-EUR classification comparison |
