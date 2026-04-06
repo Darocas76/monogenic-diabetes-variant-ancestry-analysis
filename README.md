@@ -3,7 +3,7 @@
 
 Data and analysis scripts for:
 
-**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes reveals a 70% annotation gap and differential curation burden. *European Journal of Human Genetics* (submitted, 2026).
+**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes : annotation coverage and differential curation burden. *European Journal of Human Genetics* (submitted, 2026).
 
 **Preprint:** [medRxiv DOI pending]
 
@@ -76,6 +76,6 @@ This work is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/
 
 ## Citation
 
-> Dario P. Ancestry-stratified variant classification in monogenic diabetes genes reveals a 70% annotation gap and differential curation burden. *Eur J Hum Genet*. 2026 (submitted).
+> Dario P. Ancestry-stratified variant classification in monogenic diabetes genes : annotation coverage and differential curation burden. *Eur J Hum Genet*. 2026 (submitted).
 
 [To be updated upon publication]
