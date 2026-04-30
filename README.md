@@ -4,7 +4,7 @@
 
 Data and analysis scripts for:
 
-**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes: annotation coverage and differential curation burden. *Genetics in Medicine* (submitted, 2026).
+**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes: annotation coverage and differential curation burden. Manuscript submitted for peer review (2026).
 
 **Preprint:** [medRxiv DOI 10.64898/2026.04.06.26350230](https://doi.org/10.64898/2026.04.06.26350230) (CC BY 4.0)
 
