@@ -41,15 +41,17 @@ MODY_GENES = [
     "KLF11", "PAX4", "WFS1",
 ]
 
-CLINSIG_MAP = {
-    "Pathogenic": "P",
-    "Likely pathogenic": "LP",
-    "Uncertain significance": "VUS",
-    "Likely benign": "LB",
-    "Benign": "B",
-    "Pathogenic/Likely pathogenic": "LP",
-    "Benign/Likely benign": "LB",
-}
+# Priority-ordered classification rules (most specific first).
+# Mirror of the rule set in scripts/03_merge_clinvar_gnomad.py — keep in sync.
+CLINSIG_RULES = [
+    ("Pathogenic/Likely pathogenic", "LP"),
+    ("Benign/Likely benign", "LB"),
+    ("Likely pathogenic", "LP"),
+    ("Likely benign", "LB"),
+    ("Pathogenic", "P"),
+    ("Benign", "B"),
+    ("Uncertain significance", "VUS"),
+]
 
 CHUNK_SIZE = 150_000
 
@@ -68,9 +70,21 @@ def download_clinvar(dest: Path) -> None:
 
 
 def map_clinsig(raw: str) -> str:
-    """Return simplified category for a raw ClinicalSignificance string."""
-    for key, cat in CLINSIG_MAP.items():
-        if key.lower() in raw.lower():
+    """Return simplified ACMG/AMP tier for a raw ClinicalSignificance string.
+
+    Uses lower-cased exact matching against the priority-ordered CLINSIG_RULES
+    list. Anything not matching (e.g. compound terms with risk-allele or
+    drug-response qualifiers, conflicting classifications, bare "-") is
+    returned as "Other" and excluded from P/LP/VUS/LB/B breakdowns.
+    """
+    if not isinstance(raw, str):
+        return "Other"
+    raw_stripped = raw.strip()
+    if raw_stripped == "Not in ClinVar":
+        return "Not in ClinVar"
+    raw_lower = raw_stripped.lower()
+    for key, cat in CLINSIG_RULES:
+        if key.lower() == raw_lower:
             return cat
     return "Other"
 

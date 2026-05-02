@@ -54,7 +54,13 @@ Python 3.10+, pandas ≥2.1, scipy ≥1.11, matplotlib ≥3.8, requests ≥2.31,
 4. **Statistical analysis:** `python scripts/04_statistical_analysis.py`
 5. **Generate figures:** `python scripts/05_generate_figures.py`
 
-> **Note:** Step 2 queries the gnomAD GraphQL API for 17 genes and may take several minutes. Steps 3–5 use the pre-computed data files in `data/` and can be run independently.
+> **Note on independent execution:** Step 2 queries the gnomAD GraphQL API
+> for 17 genes and may take 10–15 minutes (rate-limited; the script applies
+> a 3 s baseline pause and exponential backoff on HTTP 429). Its output,
+> `data/gnomad_mody_raw.csv` (~9–10 MB), is **not committed** to keep the
+> repository lightweight and is required as input to step 3. Steps 4 and 5
+> can be re-run independently from the committed CSVs in `data/`; step 3
+> requires step 2 to be run first.
 
 ## Key data files
 

@@ -43,22 +43,39 @@ MODY_GENES = [
 
 POPULATIONS = ["afr", "amr", "eas", "sas", "nfe", "fin", "asj", "mid"]
 
-CLINSIG_MAP = {
-    "Pathogenic": "P",
-    "Likely pathogenic": "LP",
-    "Uncertain significance": "VUS",
-    "Likely benign": "LB",
-    "Benign": "B",
-    "Pathogenic/Likely pathogenic": "LP",
-    "Benign/Likely benign": "LB",
-}
+# Priority-ordered classification rules. Uses exact (lower-cased) matching
+# against the raw ClinVar string; the most specific compound categories must
+# appear before their substrings to avoid mis-classification (e.g. "Likely
+# pathogenic" must not be matched by the "Pathogenic" rule). Compound forms
+# such as "Pathogenic/Likely pathogenic" follow ClinGen SVI convention and
+# are mapped to the more conservative LP / LB tier.
+CLINSIG_RULES = [
+    ("Pathogenic/Likely pathogenic", "LP"),
+    ("Benign/Likely benign", "LB"),
+    ("Likely pathogenic", "LP"),
+    ("Likely benign", "LB"),
+    ("Pathogenic", "P"),
+    ("Benign", "B"),
+    ("Uncertain significance", "VUS"),
+]
 
 
 def map_clinsig(raw: str) -> str:
+    """Return the simplified ACMG/AMP tier for a ClinVar significance string.
+
+    Anything not matching one of the seven rules above (e.g. "Conflicting
+    classifications of pathogenicity", "drug response", "risk factor",
+    bare "-") is returned as "Other" and excluded from the
+    P/LP/VUS/LB/B breakdown in downstream analyses.
+    """
     if not isinstance(raw, str):
         return "Other"
-    for key, cat in CLINSIG_MAP.items():
-        if key.lower() in raw.lower():
+    raw_stripped = raw.strip()
+    if raw_stripped == "Not in ClinVar":
+        return "Not in ClinVar"
+    raw_lower = raw_stripped.lower()
+    for key, cat in CLINSIG_RULES:
+        if key.lower() == raw_lower:
             return cat
     return "Other"
 
@@ -140,6 +157,16 @@ def merge_datasets(
     then annotate with ClinVar classification.
     """
     raw = pd.read_csv(gnomad_csv, low_memory=False)
+
+    # Fix (audit 2026-05-02): pivot_table drops rows with NaN in index columns
+    # (pandas dropna=True default since 1.0). hgvsp / lof are NaN in a large
+    # fraction of variants (synonymous, intronic, non-LoF), so without this
+    # fillna the pivot reduces 14,691 unique variants to ~400 and silently
+    # collapses the merged table. Replace NaNs with empty string so every
+    # variant survives the aggregation.
+    for col in ("hgvsc", "hgvsp", "lof"):
+        if col in raw.columns:
+            raw[col] = raw[col].fillna("")
 
     # Pivot: variant_id → AF per population
     wide = raw.pivot_table(

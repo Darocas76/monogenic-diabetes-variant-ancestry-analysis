@@ -202,7 +202,18 @@ def gene_by_gene(df: pd.DataFrame, merged_csv: Path) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def fetch_clingen() -> pd.DataFrame:
-    """Query ClinGen Evidence Repository for gene-disease validity curations."""
+    """Query ClinGen Evidence Repository for gene-disease validity curations.
+
+    NOTE (audit 2026-05-02): the public ClinGen Evidence Repository GraphQL/REST
+    endpoints have been reorganised over time and the query format below may
+    return an empty payload depending on the current API contract. The
+    committed `data/clingen_results.csv` reflects a curated extraction at
+    manuscript time. If a live re-query returns zero records, the function
+    falls back gracefully and the caller will keep the committed snapshot
+    rather than overwriting it with empty data; verify the current API
+    schema at https://search.clinicalgenome.org/kb/gene-validity before
+    re-running the pipeline against fresh ClinGen data.
+    """
     url = "https://erepo.clinicalgenome.org/evrepo/api/classifications"
     genes_query = ",".join(MODY_GENES)
     params = {"genes": genes_query, "limit": 200}
@@ -270,25 +281,56 @@ def main() -> None:
     # ClinGen
     print("[INFO] Querying ClinGen API …")
     clingen = fetch_clingen()
-    clingen.to_csv(data_dir / "clingen_results.csv", index=False)
-    print(f"[INFO] Saved clingen_results.csv ({len(clingen)} records).")
+    clingen_path = data_dir / "clingen_results.csv"
+    if len(clingen) == 0 and clingen_path.exists():
+        print(
+            f"[INFO] ClinGen API returned 0 records — keeping committed "
+            f"snapshot at {clingen_path} unchanged."
+        )
+    else:
+        clingen.to_csv(clingen_path, index=False)
+        print(f"[INFO] Saved clingen_results.csv ({len(clingen)} records).")
 
     # Summary table
-    total = len(df)
+    # Audit 2026-05-02: previous implementation reported a single
+    # "Total_annotated_variants" that was later inconsistent with the
+    # category breakdown after the supplementary table was filtered to the
+    # five main ACMG/AMP tiers (P/LP/VUS/LB/B). Now reports BOTH totals
+    # explicitly:
+    #   - Total_annotated_variants: every variant with any ClinVar entry
+    #     (matches the manuscript's 4,366 number from gnomad_clinvar_merged)
+    #   - Total_in_main_categories: only variants with one of the five tiers
+    #     (matches the row count of supplementary_table1)
+    # All percentages are computed against Total_in_main_categories so that
+    # they sum to 100% (excluding "Other" — conflicting / risk-allele /
+    # drug-response classifications).
+    main_tier_n = len(df)
     vus_n = (df["clinvar_category"] == "VUS").sum()
     plp_n = df["clinvar_category"].isin(["P", "LP"]).sum()
     blb_n = df["clinvar_category"].isin(["B", "LB"]).sum()
+
+    merged_path = data_dir / "gnomad_clinvar_merged.csv"
+    if merged_path.exists():
+        merged_df = pd.read_csv(merged_path, low_memory=False)
+        total_annotated = (merged_df["ClinicalSignificance"] != "Not in ClinVar").sum()
+        other_n = total_annotated - main_tier_n
+    else:
+        total_annotated = main_tier_n
+        other_n = 0
+
     summary = pd.DataFrame(
         [
             {
-                "Total_annotated_variants": total,
-                "VUS_n": vus_n,
-                "VUS_%": round(vus_n / total * 100, 2),
-                "PLP_n": plp_n,
-                "PLP_%": round(plp_n / total * 100, 2),
-                "BLB_n": blb_n,
-                "BLB_%": round(blb_n / total * 100, 2),
-                "Genes_analysed": df["gene"].nunique(),
+                "Total_annotated_variants": int(total_annotated),
+                "Total_in_main_categories": int(main_tier_n),
+                "VUS_n": int(vus_n),
+                "VUS_%": round(vus_n / main_tier_n * 100, 2) if main_tier_n else 0.0,
+                "PLP_n": int(plp_n),
+                "PLP_%": round(plp_n / main_tier_n * 100, 2) if main_tier_n else 0.0,
+                "BLB_n": int(blb_n),
+                "BLB_%": round(blb_n / main_tier_n * 100, 2) if main_tier_n else 0.0,
+                "Other_n": int(other_n),
+                "Genes_analysed": int(df["gene"].nunique()),
             }
         ]
     )

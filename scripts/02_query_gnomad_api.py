@@ -18,7 +18,8 @@ Notes:
       There is NO 'af' field in this schema — allele frequency is computed
       as AC/AN where AN > 0.
     - WFS1 has ~5,238 variants and is queried with a longer timeout (300 s).
-    - Rate-limiting: a 1-second pause between gene queries is included.
+    - Rate-limiting: 3 s pause between gene queries plus exponential
+      backoff (max 5 retries) on HTTP 429 / transient network errors.
 """
 
 import json
@@ -71,25 +72,61 @@ QUERY_TEMPLATE = """
 # Helpers
 # ---------------------------------------------------------------------------
 
+MAX_RETRIES = 5
+INITIAL_BACKOFF = 4  # seconds; doubled each retry
+
+
 def query_gene(gene: str, timeout: int = 120) -> list[dict]:
-    """Query gnomAD API for a single gene. Returns list of variant dicts."""
+    """Query gnomAD API for a single gene. Returns list of variant dicts.
+
+    Retries on HTTP 429 (rate-limited) and on transient network errors with
+    exponential backoff. Audit 2026-05-02 confirmed that a fresh run of the
+    full 17-gene panel hits 429 around the 9th gene with a static 1 s pause;
+    backoff is therefore mandatory rather than optional.
+    """
     query = QUERY_TEMPLATE.replace("GENE_SYMBOL", gene).replace(
         "DATASET_NAME", DATASET
     )
     payload = json.dumps({"query": query})
     headers = {"Content-Type": "application/json"}
 
-    resp = requests.post(
-        GNOMAD_API, data=payload, headers=headers, timeout=timeout
+    backoff = INITIAL_BACKOFF
+    last_exc: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = requests.post(
+                GNOMAD_API, data=payload, headers=headers, timeout=timeout
+            )
+            if resp.status_code == 429:
+                wait = backoff
+                print(
+                    f"\n[WARN] {gene}: HTTP 429 on attempt {attempt}; "
+                    f"sleeping {wait} s before retry…",
+                    flush=True,
+                )
+                time.sleep(wait)
+                backoff *= 2
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            if "errors" in data:
+                raise RuntimeError(f"GraphQL errors for {gene}: {data['errors']}")
+            variants = data.get("data", {}).get("gene", {}).get("variants", [])
+            return variants
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            last_exc = exc
+            wait = backoff
+            print(
+                f"\n[WARN] {gene}: {type(exc).__name__} on attempt {attempt}; "
+                f"sleeping {wait} s before retry…",
+                flush=True,
+            )
+            time.sleep(wait)
+            backoff *= 2
+
+    raise RuntimeError(
+        f"{gene}: exhausted {MAX_RETRIES} retries; last error: {last_exc}"
     )
-    resp.raise_for_status()
-    data = resp.json()
-
-    if "errors" in data:
-        raise RuntimeError(f"GraphQL errors for {gene}: {data['errors']}")
-
-    variants = data.get("data", {}).get("gene", {}).get("variants", [])
-    return variants
 
 
 def flatten_variants(gene: str, variants: list[dict]) -> list[dict]:
@@ -151,7 +188,7 @@ def main() -> None:
         except Exception as exc:
             print(f"FAILED: {exc}")
             failed.append(gene)
-        time.sleep(1)
+        time.sleep(3)  # baseline pause; query_gene() handles 429 backoff internally
 
     if all_rows:
         df = pd.DataFrame(all_rows)
