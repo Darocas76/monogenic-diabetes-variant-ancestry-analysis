@@ -1,18 +1,18 @@
-# Intermediate data files
-variant_summary.txt.gz
-gnomad_mody_raw.csv
-clinvar_mody_dict.pkl
-
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
 .ipynb_checkpoints/
 
+# Large downloaded inputs (fetched by the pipeline; not committed)
+clinvar.vcf.gz
+variant_summary.txt.gz
+gnomad_v4/
+
+# Manuscript / submission / proof documents — must NOT go to the public code repo
+*.docx
+*.pdf
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Submission documents (not for repository)
-*.docx
-*.xlsx

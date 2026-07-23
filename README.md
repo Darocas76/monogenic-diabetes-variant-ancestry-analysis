@@ -1,103 +1,74 @@
 # Ancestry-stratified variant classification in monogenic diabetes genes
+
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![medRxiv](https://img.shields.io/badge/medRxiv-2026.04.06.26350230-red.svg)](https://doi.org/10.64898/2026.04.06.26350230)
 
-Data and analysis scripts for:
+Data and analysis code for:
 
-**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes: annotation coverage and differential curation burden. Manuscript submitted for peer review (2026).
+**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes: annotation coverage and differential curation burden. *Annals of Human Genetics* (accepted; in press, 2026).
 
 **Preprint:** [medRxiv DOI 10.64898/2026.04.06.26350230](https://doi.org/10.64898/2026.04.06.26350230) (CC BY 4.0)
 
 ## Author
 
 **Paulo Dario, PhD**
-Instituto Nacional de Saúde Doutor Ricardo Jorge (INSA), Lisboa, Portugal
+Departamento da Promocao da Saude e Prevencao de Doencas Nao Transmissiveis, Instituto Nacional de Saude Doutor Ricardo Jorge (INSA), Lisboa, Portugal
 Centro Cardiovascular da Universidade de Lisboa (CCUL), Faculdade de Medicina, Universidade de Lisboa
-BioSystems & Integrative Sciences Institute (BioISI), Faculdade de Ciências, Universidade de Lisboa
+BioSystems & Integrative Sciences Institute (BioISI), Faculdade de Ciencias, Universidade de Lisboa
 ORCID: [0000-0002-4203-9179](https://orcid.org/0000-0002-4203-9179)
 Correspondence: paulo.dario@insa.min-saude.pt
 
 ## Overview
 
-This repository contains the data and code to reproduce the analysis presented in the manuscript. The study cross-references ClinVar variant classifications (GRCh38, April 2026; 4,421,188 variants) with gnomAD v4.0 genome allele frequency data for 17 monogenic diabetes genes (*HNF1A, HNF4A, HNF1B, GCK, KCNJ11, ABCC8, INS, PDX1, NEUROD1, PTF1A, CEL, PPARG, APPL1, BLK, KLF11, PAX4, WFS1*), stratified by genetic ancestry group.
+This repository reproduces the analysis in the manuscript. It cross-references ClinVar clinical classifications (GRCh38 VCF, accessed 2026-06-29) with gnomAD v4.0 allele-count data (genomes and exomes combined; 807,162 individuals) for 16 primary monogenic diabetes (MODY) genes, stratified by genetic-ancestry group. Variants are classified as **population-private** when observed (allele count > 0) in exactly one ancestry macro-group — European {NFE, FIN, ASJ} or non-European {AFR, AMR, EAS, SAS, MID} — with variants seen in both reported as *shared*. *KLF11*, refuted as a MODY gene by the ClinGen Gene Curation Expert Panel, is excluded from the primary analysis (16 genes) and retained only in the supplement.
 
-**Key findings:** 70.3% annotation gap (10,325 of 14,691 gnomAD variants without ClinVar classification); divergent mechanisms producing apparent VUS-rate symmetry between EUR and non-EUR groups (NFE submission backlog vs AFR functional-evidence deficit); pattern inversion at *GCK* (non-EUR VUS 18.5% > EUR 15.0%) consistent with progressive European reclassification absent in non-European cohorts.
+Gene set (17 total; 16 primary): *HNF1A, HNF4A, HNF1B, GCK, KCNJ11, ABCC8, INS, PDX1, NEUROD1, PTF1A, CEL, PPARG, APPL1, BLK, PAX4, WFS1* (primary) and *KLF11* (refuted; supplement only).
+
+## Key findings
+
+- **Annotation gap (near-universal, not ancestry-specific):** of 54,865 gnomAD v4 variants in the 16 primary genes, 86.7% have no ClinVar classification (89.4% European-private, 87.5% non-European-private, 62.8% shared). In absolute terms the unannotated set holds more European-private (17,608) than non-European-private (9,860) variants, reflecting gnomAD's European-weighted composition.
+- **Actionability gap (the central result):** among classified population-private variants, the pathogenic/likely-pathogenic rate is 19.8% for European-private (n = 1,935) but only 8.6% for non-European-private variants (n = 1,274); Fisher exact OR 2.6 (95% CI 2.1-3.3), p = 1x10^-18, with a higher uncertain-significance rate in non-European-private variants (52.1% vs 45.8%).
+- **Global ClinVar composition (GRCh38, release 2026-06-28):** 4,439,382 records; VUS 52.1%, likely benign 24.5%, pathogenic + likely pathogenic 6.8%.
 
 ## Repository structure
 
 ```
 scripts/          Analysis pipeline (Python)
-data/             Processed data files (CSV)
-figures/          Publication figures (PNG 300 DPI + SVG)
+data/             Frozen inputs and merged/derived data (JSON + CSV)
+figures/          Manuscript figures (PNG, 300 DPI)
+supplementary/    Supplementary tables (XLSX)
+RESULTS.md        Frozen headline numbers for this revision
+requirements.txt  Python dependencies
 ```
 
 ## Data sources
 
-- **ClinVar:** variant_summary.txt.gz (GRCh38, accessed April 2026) — https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/
-- **gnomAD:** v4.0 genomes via public GraphQL API — https://gnomad.broadinstitute.org/api (dataset: gnomad_r4)
+- **ClinVar:** GRCh38 VCF (NCBI), accessed 2026-06-29 — https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/
+- **gnomAD:** v4.0 genomes + exomes via the public GraphQL API — https://gnomad.broadinstitute.org/api (dataset: `gnomad_r4`)
+
+A single dated snapshot is used throughout. No filtering by ClinVar review status is applied; records with conflicting interpretations are mapped to *other* and excluded from classification-rate calculations.
 
 ## Reproducing the analysis
-
-### Requirements
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Python 3.10+, pandas ≥2.1, scipy ≥1.11, matplotlib ≥3.8, requests ≥2.31, adjustText ≥1.0
+Pipeline (run from `data/`, which holds the frozen inputs):
 
-### Pipeline
+0. **Build ClinVar lookup + global composition (Table 1):** `python ../scripts/00_clinvar_vcf_to_lookup.py clinvar.vcf.gz` -> `clinvar_lookup.json` + `table1_global.csv` (needs the ClinVar GRCh38 VCF; gzip only, no pysam)
+1. **Fetch gnomAD v4 (genomes + exomes):** `python ../scripts/01_fetch_gnomad_v4.py` -> `gnomad_v4_all.json`
+2. **Cross-reference and analyse:** `python ../scripts/02_merge_analyze.py` -> `merged_v4.json` + printed headline numbers
+3. **Generate figures:** `python ../scripts/03_make_figures.py` -> `Figure_1.png`, `Figure_2.png`, `Figure_3.png`
 
-1. **Download ClinVar data:** `python scripts/01_download_clinvar.py`
-2. **Query gnomAD API:** `python scripts/02_query_gnomad_api.py`
-3. **Cross-reference databases:** `python scripts/03_merge_clinvar_gnomad.py`
-4. **Statistical analysis:** `python scripts/04_statistical_analysis.py`
-5. **Generate figures:** `python scripts/05_generate_figures.py`
-
-> **Note on independent execution:** Step 2 queries the gnomAD GraphQL API
-> for 17 genes and may take 10–15 minutes (rate-limited; the script applies
-> a 3 s baseline pause and exponential backoff on HTTP 429). Its output,
-> `data/gnomad_mody_raw.csv` (~9–10 MB), is **not committed** to keep the
-> repository lightweight and is required as input to step 3. Steps 4 and 5
-> can be re-run independently from the committed CSVs in `data/`; step 3
-> requires step 2 to be run first.
-
-## Key data files
-
-| File | Description |
-|------|-------------|
-| `data/supplementary_table1.csv` | 4,366 ClinVar-annotated variants with population allele frequencies (matches Supplementary Table S3 in the manuscript) |
-| `data/gene_by_gene_analysis.csv` | ClinVar/gnomAD coverage and VUS rates by gene and ancestry |
-| `data/mody_vus_by_population.csv` | VUS rates by individual gnomAD ancestry group |
-| `data/mody_vus_EUR_vs_nonEUR.csv` | Aggregated EUR vs non-EUR classification comparison |
-| `data/gnomad_clinvar_merged.csv` | Full cross-referenced dataset (ClinVar × gnomAD by population) |
-| `data/clinvar_global_summary.csv` | Global ClinVar classification distribution (GRCh38, all chromosomes) |
-| `data/clingen_results.csv` | ClinGen gene-disease validity curations for the 17 target genes |
+Steps 2-3 run from the pre-computed JSON files in `data/`, so the analysis can be reproduced without re-querying the gnomAD API. Rebuilding `clinvar_lookup.json` from the ClinVar VCF requires `pysam`.
 
 ## Figures
 
-Numbering matches the manuscript:
-
-| Figure | Description |
-|--------|-------------|
-| Figure 1 | ClinVar annotation coverage vs. EUR–non-EUR VUS divergence (scatter plot, 17 genes; gene labels positioned with adjustText) |
-| Figure 2 | VUS rate by genetic ancestry group (horizontal bar chart, 8 gnomAD groups) |
-| Figure 3 | Gene × ancestry heatmap of VUS rates (17 genes × 8 populations) |
-
-## Supplementary materials
-
-Supplementary tables and the VariantValidator HGVS verification report are included with the journal submission and in the medRxiv preprint deposit.
+- **Figure 1 - Annotation gap by ancestry.** Percentage of gnomAD v4 variants without any ClinVar classification, overall and by ancestry group.
+- **Figure 2 - Classification of population-private variants by ancestry.** Grouped bars (VUS; P/LP; B/LB) for European-private vs non-European-private variants.
+- **Figure 3 - Gene-level P/LP rate among classified population-private variants.** Heatmap by gene and ancestry.
 
 ## License
 
-This work is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). You are free to share and adapt the material with appropriate attribution.
-
-## Citation
-
-> Dario P. Ancestry-stratified variant classification in monogenic diabetes genes: annotation coverage and differential curation burden. medRxiv 2026.04.06.26350230 (preprint). doi:10.64898/2026.04.06.26350230
-
-(Citation will be updated with the published journal reference upon acceptance.)
-
-## Issues
-
-Please open an issue on this repository if you find a bug, have a question about reproducing the analysis, or want to discuss extensions to other gene panels.
+Content licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
