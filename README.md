@@ -14,7 +14,7 @@ Data and analysis code for:
 ## Author
 
 **Paulo Dario, PhD**
-Departamento da Promocao da Saude e Prevencao de Doencas Nao Transmissiveis, Instituto Nacional de Saude Doutor Ricardo Jorge (INSA), Lisboa, Portugal
+Departamento da Promoção da Saúde e Prevenção de Doenças Não Transmissíveis, Instituto Nacional de Saude Doutor Ricardo Jorge (INSA), Lisboa, Portugal
 Centro Cardiovascular da Universidade de Lisboa (CCUL), Faculdade de Medicina, Universidade de Lisboa
 BioSystems & Integrative Sciences Institute (BioISI), Faculdade de Ciencias, Universidade de Lisboa
 ORCID: [0000-0002-4203-9179](https://orcid.org/0000-0002-4203-9179)
