@@ -1,13 +1,15 @@
 # Ancestry-stratified variant classification in monogenic diabetes genes
 
+[![DOI](https://img.shields.io/badge/DOI-10.1111%2Fahg.70054-blue.svg)](https://doi.org/10.1111/ahg.70054)
+
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![medRxiv](https://img.shields.io/badge/medRxiv-2026.04.06.26350230-red.svg)](https://doi.org/10.64898/2026.04.06.26350230)
 
 Data and analysis code for:
 
-**Dario P.** Ancestry-stratified variant classification in monogenic diabetes genes: annotation coverage and differential curation burden. *Annals of Human Genetics* (accepted; in press, 2026).
+**Dario P.** Ancestry-Stratified Variant Classification in Monogenic Diabetes Genes: Annotation Coverage and Differential Curation Burden. *Annals of Human Genetics*, published online 23 August 2026. https://doi.org/10.1111/ahg.70054
 
-**Preprint:** [medRxiv DOI 10.64898/2026.04.06.26350230](https://doi.org/10.64898/2026.04.06.26350230) (CC BY 4.0)
+**Preprint (earlier version):** [medRxiv 10.64898/2026.04.06.26350230](https://doi.org/10.64898/2026.04.06.26350230) — reports the earlier genomes-only analysis; please cite the published article above.
 
 ## Author
 
